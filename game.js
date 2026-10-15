@@ -96,8 +96,12 @@ const T = (o, x, y, s, sz = 16, c = '#fff') =>
 const PAL = {
   Y: 0xf2c14e, T: 0xc98a2b, K: 0x1a0f00, W: 0xffffff, G: 0x4ade4a, D: 0x1c6b1c,
   M: 0x7a3b1a, U: 0x8b5fbf, Q: 0xffe95c, R: 0xe63946, L: 0xff6fb5, Z: 0xb03a7a,
+  O: 0xd9a406, A: 0x6b3a14, N: 0xbbbbbb,
 };
 const SPR = {
+  iq: ['....OOOOOOO', '..OOQQQQQQO', 'OOQQQQKQQQO', 'OQQQQQQQQQO', 'OQQKQQQQQQO', 'OQQQQQQKQQO', 'OOOOOOOOOOO'],
+  im: ['..YYY..', '..AAA..', '.AAAAA.', 'AAWAAAA', 'AAWAAAA', 'AAAAAAA', 'AAYYYAA', 'AAYYYAA', 'AAAAAAA', '.AAAAA.'],
+  ig: ['..GGGGGGG..', '.GGGGWGGGG.', 'GGGGGGGGGGG', 'WWWWWWWWWWW', '.WWWWWWWWW.', '..NNNNNNN..'],
   arepa: ['...TTTTTTT...', '.TTYYYYYYYTT.', 'TTYYYYYYYYYTT', 'TYYYYYYYYYYYT', 'TYYKYYYYYKYYT', 'TYYKYYYYYKYYT', 'TYYYYYYYYYYYT', 'TYYYKYYYKYYYT', 'TTYYYKKKYYYTT', '.TTYYYYYYYTT.', '...TTTTTTT...'],
   aguacate: ['...DDD...', '..DGGGD..', '.DGGGGGD.', '.DGKGKGD.', 'DGGGGGGGD', 'DGGMMMGGD', 'DGGMMMGGD', '.DGGGGGD.', '..DDDDD..'],
   caraota: ['.UUUUU.', 'UUUUUUU', 'UWKUWKU', 'UUUUUUU', '.UUUUU.'],
@@ -128,6 +132,9 @@ class Menu extends Phaser.Scene {
       mk(o, 'zig', SPR.caraota, 4);
       mk(o, 'tank', SPR.queso, 4);
       mk(o, 'boss', SPR.boss, 5);
+      mk(o, 'iq', SPR.iq, 4);
+      mk(o, 'im', SPR.im, 4);
+      mk(o, 'ig', SPR.ig, 4);
       const g = o.make.graphics({ add: false });
       g.fillStyle(0xffffff); g.fillRect(0, 0, 2, 2); g.generateTexture('px', 2, 2); g.clear();
       g.fillStyle(0xc98a2b); g.fillCircle(6, 6, 6); g.fillStyle(0xf2c14e); g.fillCircle(6, 6, 4.5); g.generateTexture('pb', 12, 12); g.clear();
@@ -149,8 +156,12 @@ class Menu extends Phaser.Scene {
       o.tweens.add({ targets: s, y: 250, yoyo: true, repeat: -1, duration: 800 + i * 150, ease: 'sine.inOut' });
     });
     T(o, W / 2, 310, 'LAS AREPAS DEFIENDEN LA MESA CONTRA AGUACATES, CARAOTAS Y QUESOS', 15, '#ccc').setOrigin(0.5);
-    T(o, W / 2, 370, 'JOYSTICK: MOVER - DISPARO AUTOMATICO\nBOTON 1 / 2: GUASACACA (BOMBA)', 16, '#aaa').setOrigin(0.5);
-    T(o, W / 2, 440, 'Q = MAS QUESO   M = MALTA (ESCUDO)   G = GUASACACA\nROZA LAS BALAS PARA PUNTOS - ENCADENA KILLS: COMBO', 14, '#8f8').setOrigin(0.5);
+    T(o, W / 2, 365, 'JOYSTICK: MOVER - DISPARO AUTOMATICO\nBOTON 1 / 2: GUASACACA (BOMBA) - START: PAUSA', 15, '#aaa').setOrigin(0.5);
+    [['iq', 220, 'MAS QUESO\nARMA +1'], ['im', 400, 'MALTA\nESCUDO'], ['ig', 580, 'GUASACACA\nBOMBA']].forEach(([k, x, l], i) => {
+      const im = o.add.image(x, 430, k);
+      o.tweens.add({ targets: im, y: 440, angle: 8, yoyo: true, repeat: -1, duration: 600 + i * 120, ease: 'sine.inOut' });
+      T(o, x, 478, l, 12, '#8f8').setOrigin(0.5, 0);
+    });
     o.pr = T(o, W / 2, 525, '>> START 1: UN JUGADOR  -  START 2: DOS JUGADORES <<', 20, YL).setOrigin(0.5);
     o.hi = T(o, W / 2, 575, '', 14, '#f6f').setOrigin(0.5);
     o.tweens.add({ targets: o.pr, alpha: 0.3, yoyo: true, repeat: -1, duration: 500 });
@@ -171,7 +182,7 @@ class Play extends Phaser.Scene {
   init(d) { this.n = (d && d.n) || 1; }
   create() {
     const o = this, n = o.n;
-    Object.assign(o, { sc: 0, lives: n == 2 ? 5 : 3, wave: 1, kills: 0, combo: 0, lk: -9999, bm: 1, over: false, boss: null, nf: 0, ns: 1500, step: 0, t0: 0, pb: [], en: [], eb: [], pu: [] });
+    Object.assign(o, { sc: 0, lives: n == 2 ? 4 : 3, wave: 1, kills: 0, combo: 0, lk: -9999, bm: 1, over: false, paused: false, gt: 0, boss: null, nf: 0, ns: 1500, step: 0, t0: 0, pb: [], en: [], eb: [], pu: [] });
     o.bg = o.add.graphics();
     o.stars = [];
     for (let i = 0; i < 80; i++) {
@@ -194,12 +205,14 @@ class Play extends Phaser.Scene {
     o.hl = T(o, 14, H - 30, '', 18, '#ff9d3a');
     o.hc = T(o, W / 2, 40, '', 22, YL).setOrigin(0.5, 0);
     o.hb = T(o, W - 14, H - 30, '', 16, '#4ade4a').setOrigin(1, 0);
+    o.pt = T(o, W / 2, H / 2, 'PAUSA\n\nSTART PARA SEGUIR', 36, YL).setOrigin(0.5).setStroke('#000', 6).setDepth(120).setVisible(false);
     onPress = (c) => {
       if (o.over) {
-        if (o.time.now > o.t0 + 900) o.scene.restart({ n: o.n });
+        if (o.gt > o.t0 + 900) o.scene.restart({ n: o.n });
         return;
       }
-      if (/^P[12]_[1-6]$/.test(c)) o.bomb();
+      if (c === 'START1' || c === 'START2' || c === 'P1_3' || c === 'P2_3') { o.pause(); return; }
+      if (!o.paused && /^P[12]_[12]$/.test(c)) o.bomb();
     };
     o.time.addEvent({ delay: 135, loop: true, callback: () => {
       if (o.over) return;
@@ -207,7 +220,15 @@ class Play extends Phaser.Scene {
       sfx(m[i] * (o.wave > 8 ? 2 : 1), 0.12, 'triangle', 0.07, -0.2);
       if (i % 4 == 2) sfx(1800, 0.03, 'square', 0.012, -0.9);
     } });
-    o.banner('OLEADA 1');
+    o.banner('LISTO? OLEADA 1');
+  }
+  pause() {
+    const o = this;
+    o.paused = !o.paused;
+    o.time.paused = o.paused;
+    if (o.paused) o.tweens.pauseAll(); else o.tweens.resumeAll();
+    o.pt.setVisible(o.paused);
+    sfx(o.paused ? 300 : 600, 0.15, 'square', 0.06, o.paused ? -0.4 : 0.4);
   }
   banner(m, c = YL) {
     const t = T(this, W / 2, H / 2 - 40, m, 38, c).setOrigin(0.5).setStroke('#000', 6);
@@ -237,26 +258,58 @@ class Play extends Phaser.Scene {
     });
     sfx(700, 0.06, 'square', 0.02, -0.5);
   }
-  spawn() {
+  spawn(k, x, y, amp) {
     const o = this, w = o.wave, r = R();
-    const k = r < 0.18 && w >= 3 ? 'tank' : r < 0.5 && w >= 2 ? 'zig' : 'drone', x = B(50, W - 50);
-    const e = o.add.image(x, -30, k).setDepth(3);
-    Object.assign(e, { x0: x, a: 0, k, hp: k == 'tank' ? 4 : 1, vy: k == 'tank' ? 50 : k == 'zig' ? 130 : 80 + w * 6, pts: k == 'tank' ? 300 : k == 'zig' ? 150 : 100, nf: o.time.now + B(800, 2500) });
+    k = k || (r < 0.2 && w >= 3 ? 'tank' : r < 0.5 && w >= 2 ? 'zig' : 'drone');
+    x = x === undefined ? B(50, W - 50) : x;
+    const e = o.add.image(x, y === undefined ? -30 : y, k).setDepth(3);
+    Object.assign(e, {
+      x0: x, a: 0, k, hp: k == 'tank' ? 5 : 1,
+      vy: k == 'tank' ? 55 : k == 'zig' ? 140 : 90 + w * 7,
+      pts: k == 'tank' ? 300 : k == 'zig' ? 150 : 100,
+      amp: amp === undefined ? (k == 'zig' ? 90 : k == 'drone' ? 50 : 0) : amp,
+      nf: o.gt + B(700, 2200),
+    });
     o.en.push(e);
+  }
+  vform() {
+    const cx = B(180, W - 180);
+    for (let i = 0; i < 5; i++) this.spawn('drone', cx + (i - 2) * 56, -30 - Math.abs(i - 2) * 44, 0);
+  }
+  wall() {
+    const gap = B(1, 6);
+    for (let i = 0; i < 9; i++) if (i != gap && i != gap + 1) this.spawn('drone', 40 + i * 90, -30, 0);
   }
   spawnBoss() {
     const o = this, i = ((o.wave / 4 - 1) | 0) % 4, e = o.add.image(W / 2, -60, 'boss').setDepth(3).setTint(BT[i]);
-    Object.assign(e, { x0: W / 2, a: 0, k: 'boss', hp: (30 + o.wave * 5) * (o.n == 2 ? 1.6 : 1), pts: 5000, nf: 0, n: 0 });
+    Object.assign(e, { x0: W / 2, a: 0, k: 'boss', hp: (40 + o.wave * 8) * (o.n == 2 ? 1.7 : 1), pts: 5000, nf: 0, n: 0, ph: 0, sp: 0 });
     e.mh = e.hp;
     o.boss = e; o.en.push(e);
     o.banner('!! ' + BN[i] + ' !!', '#ff6b6b');
     sfx(80, 0.8, 'sawtooth', 0.1, 1);
   }
+  bossAtk(e) {
+    const o = this, p = o.tgt().s, ph = e.ph, a0 = e.a;
+    const pats = [['ring', 'fan'], ['spiral', 'ring', 'wall'], ['spiral', 'wall', 'fan', 'ring']][ph];
+    const k = pats[e.n++ % pats.length];
+    if (k == 'ring') {
+      const c = 10 + ph * 4;
+      for (let i = 0; i < c; i++) o.ef(e.x, e.y + 20, i / c * 6.283 + a0, 150 + ph * 20);
+    } else if (k == 'fan') {
+      const b = Math.atan2(p.y - e.y, p.x - e.x);
+      for (let j = -2; j <= 2; j++) o.ef(e.x, e.y + 20, b + j * 0.2, 270);
+    } else if (k == 'spiral') {
+      for (let i = 0; i < 10; i++) o.time.delayedCall(i * 90, () => { if (e.active && !o.over) o.ef(e.x, e.y + 20, a0 + i * 0.55, 190); });
+    } else {
+      const g = B(1, 14);
+      for (let i = 0; i < 16; i++) if (Math.abs(i - g) > 1) o.ef(25 + i * 50, e.y + 30, Math.PI / 2, 150);
+    }
+    sfx(150, 0.2, 'sawtooth', 0.06, -0.5);
+  }
   drop(x, y, ty) {
-    const c = { Q: '#b8860b', M: '#22aa44', G: '#2e8b2e' }[ty];
-    const t = this.add.text(x, y, ty, { fontFamily: 'monospace', fontStyle: 'bold', fontSize: '20px', color: '#fff', backgroundColor: c, padding: { x: 6, y: 2 } }).setOrigin(0.5).setDepth(4);
-    t.ty = ty;
-    this.pu.push(t);
+    const u = this.add.image(x, y, { Q: 'iq', M: 'im', G: 'ig' }[ty]).setDepth(4);
+    Object.assign(u, { ty, bx: x, ph: R() * 6, sp: 0 });
+    this.pu.push(u);
   }
   hit(e, d) {
     const o = this;
@@ -269,7 +322,7 @@ class Play extends Phaser.Scene {
     sfx(200, 0.05, 'square', 0.04);
   }
   kill(e) {
-    const o = this, t = o.time.now;
+    const o = this, t = o.gt;
     if (e.dead) return;
     e.dead = 1;
     const big = e.k == 'boss';
@@ -283,11 +336,11 @@ class Play extends Phaser.Scene {
     if (o.combo % 8 == 0) o.banner(EXC[B(0, EXC.length - 1)], '#ff9d3a');
     if (big) {
       o.boss = null;
-      ['Q', 'M', 'G'].forEach((c, i) => o.drop(e.x + (i - 1) * 50, e.y, c));
+      ['Q', 'M', 'G'].forEach((c, i) => o.drop(e.x + (i - 1) * 60, e.y, c));
       o.banner('JEFE EN EL PLATO!', '#4ade4a');
     } else {
-      if (R() < 0.11) o.drop(e.x, e.y, R() < 0.5 ? 'Q' : R() < 0.5 ? 'M' : 'G');
-      if (!o.boss && ++o.kills >= 8 + o.wave * 3) {
+      if (R() < (e.k == 'tank' ? 0.2 : 0.07)) o.drop(e.x, e.y, R() < 0.45 ? 'Q' : R() < 0.55 ? 'M' : 'G');
+      if (!o.boss && ++o.kills >= 10 + o.wave * 3) {
         o.kills = 0; o.wave++;
         o.banner('OLEADA ' + o.wave);
         if (o.wave % 4 == 0) o.spawnBoss();
@@ -306,26 +359,28 @@ class Play extends Phaser.Scene {
     o.en.slice().forEach((e) => o.hit(e, e.k == 'boss' ? 12 : 99));
   }
   hurt(pl) {
-    const o = this, t = o.time.now;
+    const o = this, t = o.gt;
     if (t < pl.inv || o.over) return;
     if (pl.sh > 0) { pl.sh--; pl.inv = t + 700; sfx(300, 0.2, 'sine', 0.1, 1); o.cameras.main.shake(100, 0.008); return; }
     o.lives--;
     pl.pw = Math.max(1, pl.pw - 1);
     o.combo = 0;
-    pl.inv = t + 2200;
+    pl.inv = t + 1800;
     o.boom(pl.s.x, pl.s.y, 40);
     o.cameras.main.shake(300, 0.02);
     if (o.lives <= 0) {
       o.over = true; o.t0 = t;
       o.ps.forEach((p) => p.s.setVisible(false));
-      const h = Math.max(HI, o.sc);
+      const h = Math.max(HI, o.sc), rk = o.sc >= 80000 ? 'S' : o.sc >= 40000 ? 'A' : o.sc >= 15000 ? 'B' : o.sc >= 5000 ? 'C' : 'D';
       HI = h;
       try { getStorage().set('arepas-hi', { s: h }); } catch (e) {}
-      T(o, W / 2, H / 2, 'SE ACABARON LAS AREPAS\n\nSCORE ' + String(o.sc).padStart(6, '0') + '\nHI    ' + String(h).padStart(6, '0') + (o.sc >= h ? '\n\nNUEVO RECORD!' : '') + '\n\nPRESIONA START', 26, '#ff9d3a').setOrigin(0.5).setStroke('#000', 6);
+      T(o, W / 2, H / 2, 'SE ACABARON LAS AREPAS\n\nSCORE ' + String(o.sc).padStart(6, '0') + '   OLEADA ' + o.wave + '\nHI    ' + String(h).padStart(6, '0') + '   RANGO ' + rk + (o.sc >= h ? '\n\nNUEVO RECORD!' : '') + '\n\nPRESIONA UN BOTON', 26, '#ff9d3a').setOrigin(0.5).setStroke('#000', 6).setDepth(120);
     }
   }
-  update(t, dt) {
-    const o = this, s = Math.min(dt, 50) / 1000;
+  update(time, dt) {
+    const o = this;
+    if (o.paused) return;
+    const d = Math.min(dt, 50), s = d / 1000, t = (o.gt += d);
     o.bg.clear().lineStyle(1, 0xf2ff00, 0.18);
     const ph = (t / 1800) % 1;
     for (let i = 0; i < 12; i++) { const f = (i + ph) / 12, y = H * f * f; o.bg.lineBetween(0, y, W, y); }
@@ -342,9 +397,12 @@ class Play extends Phaser.Scene {
       if (t > pl.nf) { pl.nf = t + (pl.pw == 4 ? 110 : 135); o.shoot(pl); }
     });
     if (!o.boss && t > o.ns) {
-      o.ns = t + Math.max(220, 800 - o.wave * 45) * (o.n == 2 ? 0.75 : 1);
-      o.spawn();
-      if (o.wave > 4 && R() < 0.2) { o.spawn(); o.spawn(); }
+      o.ns = t + Math.max(180, 720 - o.wave * 40) * (o.n == 2 ? 0.75 : 1);
+      const r = R();
+      if (o.wave >= 2 && r < 0.12) o.vform();
+      else if (o.wave >= 3 && r < 0.2) o.wall();
+      else o.spawn();
+      if (o.wave > 3 && R() < 0.25) o.spawn();
     }
     for (const b of o.pb) {
       b.x += b.vx * s; b.y += b.vy * s;
@@ -358,25 +416,30 @@ class Play extends Phaser.Scene {
       if (e.k == 'boss') {
         if (e.y < 90) e.y += 70 * s;
         else {
-          e.x = W / 2 + Math.sin(e.a * 0.9) * 280;
-          if (t > e.nf) {
-            e.nf = t + Math.max(450, 800 - o.wave * 15);
-            e.n++;
-            const c = 8 + (o.wave >> 2) * 2, p = o.tgt().s;
-            for (let i = 0; i < c; i++) o.ef(e.x, e.y + 20, i / c * 6.283 + e.a, 140);
-            if (e.n % 2) for (let j = -1; j < 2; j++) o.ef(e.x, e.y + 20, Math.atan2(p.y - e.y, p.x - e.x) + j * 0.2, 240);
-            sfx(150, 0.2, 'sawtooth', 0.06, -0.5);
-          }
+          const f = e.hp / e.mh, np = f > 0.66 ? 0 : f > 0.33 ? 1 : 2;
+          if (np > e.ph) { e.ph = np; o.banner('FASE ' + (np + 1) + '!', '#ff9d3a'); o.cameras.main.shake(300, 0.01); }
+          e.x = W / 2 + Math.sin(e.a * (0.9 + e.ph * 0.35)) * 280;
+          if (t > e.nf) { e.nf = t + Math.max(600, 1100 - o.wave * 15 - e.ph * 200); o.bossAtk(e); }
+          if (e.ph == 2 && t > e.sp) { e.sp = t + 2600; o.spawn('drone', B(60, W - 60), -30); }
         }
       } else {
-        e.y += e.vy * s;
-        e.x = e.x0 + (e.k == 'zig' ? Math.sin(e.a * 5) * 90 : e.k == 'drone' ? Math.sin(e.a * 2) * 50 : 0);
-        if (e.k != 'zig' && t > e.nf && e.y > 20 && e.y < H - 160) {
-          const p = o.tgt().s;
-          e.nf = t + Math.max(700, B(1500, 3200) - o.wave * 50);
-          o.ef(e.x, e.y, Math.atan2(p.y - e.y, p.x - e.x), 170 + o.wave * 6);
+        if (e.dvx !== undefined) {
+          if (t > e.dt) { e.x += e.dvx * s; e.y += e.dvy * s; } else e.setTintFill(((t / 60) | 0) & 1 ? 0xffffff : 0xff0000);
+        } else {
+          e.y += e.vy * s;
+          e.x = e.x0 + (e.k == 'zig' ? Math.sin(e.a * 5) * e.amp : Math.sin(e.a * 2) * e.amp);
+          if (e.k == 'zig' && o.wave >= 3 && e.y > 140 && e.y < 260) {
+            const p = o.tgt().s, an = Math.atan2(p.y - e.y, p.x - e.x);
+            e.dvx = Math.cos(an) * 430; e.dvy = Math.sin(an) * 430; e.dt = t + 450;
+          }
         }
-        if (e.y > H + 30) e.dead = 1;
+        if ((e.k == 'drone' || e.k == 'tank') && t > e.nf && e.y > 20 && e.y < H - 160) {
+          const p = o.tgt().s, an = Math.atan2(p.y - e.y, p.x - e.x), sp = 200 + o.wave * 8;
+          e.nf = t + Math.max(600, B(1200, 2600) - o.wave * 60);
+          o.ef(e.x, e.y, an, sp);
+          if (e.k == 'tank') { o.ef(e.x, e.y, an + 0.25, sp); o.ef(e.x, e.y, an - 0.25, sp); }
+        }
+        if (e.y > H + 30 || e.y < -200 || e.x < -60 || e.x > W + 60) e.dead = 1;
       }
       for (const pl of o.ps) {
         const p = pl.s;
@@ -390,24 +453,36 @@ class Play extends Phaser.Scene {
       b.x += b.vx * s; b.y += b.vy * s;
       if (b.y < -20 || b.y > H + 20 || b.x < -20 || b.x > W + 20) b.dead = 1;
       for (const pl of o.ps) {
-        const p = pl.s, dx = b.x - p.x, dy = b.y - p.y, d = dx * dx + dy * dy;
-        if (d < 64 && !b.dead) { b.dead = 1; o.hurt(pl); }
-        else if (d < 900 && !b.g && !b.dead && t >= pl.inv) {
+        const p = pl.s, dx = b.x - p.x, dy = b.y - p.y, dd = dx * dx + dy * dy;
+        if (dd < 64 && !b.dead) { b.dead = 1; o.hurt(pl); }
+        else if (dd < 900 && !b.g && !b.dead && t >= pl.inv) {
           b.g = 1; o.sc += 10;
           o.pop(p.x, p.y - 24, 'GRAZE', '#ff0');
           sfx(1500, 0.04, 'sine', 0.03, 0.5);
         }
       }
     }
+    o.fx.clear();
+    const HC = { Q: 0xffe95c, M: 0xff9d3a, G: 0x4ade4a };
     for (const u of o.pu) {
-      u.y += 90 * s;
-      if (u.y > H + 20) u.dead = 1;
+      u.y += 70 * s;
+      u.x = u.bx + Math.sin(t / 260 + u.ph) * 16;
+      u.setScale(1.5 + 0.2 * Math.sin(t / 110 + u.ph)).setAngle(Math.sin(t / 200 + u.ph) * 14);
+      const pu = 0.5 + 0.5 * Math.sin(t / 150 + u.ph);
+      o.fx.fillStyle(HC[u.ty], 0.14 + 0.16 * pu);
+      o.fx.fillCircle(u.x, u.y, 32 + 6 * pu);
+      o.fx.lineStyle(2, HC[u.ty], 0.5 + 0.4 * pu);
+      o.fx.strokeCircle(u.x, u.y, 26 + 10 * pu);
+      const sk = (t / 120) | 0;
+      if (sk !== u.sp) { u.sp = sk; o.em.explode(1, u.x + B(-14, 14), u.y + B(-14, 14)); }
+      if (u.y > H + 30) u.dead = 1;
       for (const pl of o.ps) {
         const p = pl.s;
-        if (!u.dead && Math.abs(u.x - p.x) < 26 && Math.abs(u.y - p.y) < 26) {
+        if (!u.dead && Math.abs(u.x - p.x) < 36 && Math.abs(u.y - p.y) < 34) {
           u.dead = 1;
+          o.em.explode(18, u.x, u.y);
           if (u.ty == 'Q') { if (pl.pw < 4) pl.pw++; else o.sc += 1000; }
-          else if (u.ty == 'M') pl.sh = Math.min(3, pl.sh + 1);
+          else if (u.ty == 'M') pl.sh = Math.min(2, pl.sh + 1);
           else o.bm = Math.min(3, o.bm + 1);
           o.pop(p.x, p.y - 30, { Q: 'MAS QUESO!', M: 'MALTA!', G: 'GUASACACA!' }[u.ty], '#4ade4a');
           [500, 700, 1000].forEach((f, i) => o.time.delayedCall(i * 50, () => sfx(f, 0.1, 'square', 0.05, 0.3)));
@@ -416,7 +491,6 @@ class Play extends Phaser.Scene {
     }
     const sw = (a) => a.filter((e) => { if (e.dead) { e.destroy(); return false; } return true; });
     o.pb = sw(o.pb); o.en = sw(o.en); o.eb = sw(o.eb); o.pu = sw(o.pu);
-    o.fx.clear();
     for (const pl of o.ps) {
       if (pl.sh > 0) {
         o.fx.lineStyle(2, pl.c, 0.9);
