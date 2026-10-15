@@ -403,6 +403,7 @@ class Play extends Phaser.Scene {
   }
   pick() {
     const r = R();
+    if (this.wave <= 3) return r < 0.4 ? 'Q' : r < 0.6 ? 'M' : r < 0.75 ? 'P' : r < 0.9 ? 'G' : 'V';
     return r < 0.3 ? 'Q' : r < 0.5 ? 'M' : r < 0.66 ? 'G' : r < 0.8 ? 'V' : 'P';
   }
   drop(x, y, ty) {
@@ -439,7 +440,12 @@ class Play extends Phaser.Scene {
       ['Q', 'V', 'G', 'P'].forEach((c, i) => o.drop(e.x + (i - 1.5) * 60, e.y, c));
       o.banner('JEFE EN EL PLATO!', '#4ade4a');
     } else {
-      if (R() < (e.k == 'tank' ? 0.2 : 0.07)) o.drop(e.x, e.y, o.pick());
+      const early = o.wave <= 3;
+      o.nd = (o.nd || 0) + 1;
+      if (R() < (early ? 0.2 : o.wave <= 6 ? 0.13 : 0.07) + (e.k == 'tank' ? 0.15 : 0) || (early && o.nd >= 7)) {
+        o.nd = 0;
+        o.drop(e.x, e.y, o.pick());
+      }
       if (!o.boss && ++o.kills >= 10 + o.wave * 3) {
         o.kills = 0; o.wave++;
         o.banner('OLEADA ' + o.wave);
