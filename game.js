@@ -96,9 +96,10 @@ const T = (o, x, y, s, sz = 16, c = '#fff') =>
 const PAL = {
   Y: 0xf2c14e, T: 0xc98a2b, K: 0x1a0f00, W: 0xffffff, G: 0x4ade4a, D: 0x1c6b1c,
   M: 0x7a3b1a, U: 0x8b5fbf, Q: 0xffe95c, R: 0xe63946, L: 0xff6fb5, Z: 0xb03a7a,
-  O: 0xd9a406, A: 0x6b3a14, N: 0xbbbbbb, S: 0x9be8ff, E: 0x9acd32,
+  O: 0xd9a406, A: 0x6b3a14, N: 0xbbbbbb, S: 0x9be8ff, E: 0x9acd32, X: 0x2a1838, H: 0xc9a7ff,
 };
 const SPR = {
+  bala: ['..UUUUU..', '.UHHXXXU.', 'URRXXXRRU', 'UXWRXRWXU', 'UXXXXXXXU', 'UXWKWKWXU', '.UXKKKXU.', '..UUUUU..'],
   iv: ['.QQQ.', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', '.OOO.'],
   ip: ['SSSSSSSS', 'SOOOOOOS', 'SOOEEOOS', 'SOOEEOOS', 'SOOOOOOS', 'SOOOOOOS', '.SOOOOS.', '.SSSSSS.'],
   iq: ['....OOOOOOO', '..OOQQQQQQO', 'OOQQQQKQQQO', 'OQQQQQQQQQO', 'OQQKQQQQQQO', 'OQQQQQQKQQO', 'OOOOOOOOOOO'],
@@ -106,7 +107,7 @@ const SPR = {
   ig: ['..GGGGGGG..', '.GGGGWGGGG.', 'GGGGGGGGGGG', 'WWWWWWWWWWW', '.WWWWWWWWW.', '..NNNNNNN..'],
   arepa: ['....TTTTTTT....', '..TTYYYYYYYTT..', '.TYYYTYYYYYYYT.', 'TYYYKYYYYYKYYYT', 'TYYYKYYYYYKYYYT', 'TYTYYYYYYYYYTYT', 'TOQQQQQQQQQQQOT', 'TYOOOOOOOOOOOYT', 'TYYYYYTYYYYYYYT', '.TYYYYYYYYTYYT.', '..TTYYYYYYYTT..', '....TTTTTTT....'],
   aguacate: ['...DDD...', '..DGGGD..', '.DGGGGGD.', '.DGKGKGD.', 'DGGGGGGGD', 'DGGMMMGGD', 'DGGMMMGGD', '.DGGGGGD.', '..DDDDD..'],
-  caraota: ['.UUUUU.', 'UUUUUUU', 'UWKUWKU', 'UUUUUUU', '.UUUUU.'],
+  caraota: ['...UUUUUUU...', '.UUHHHXXXXUU.', 'UXRRXXXXXRRXU', 'UXXWRXXXRWXXU', 'UXXXXXXXXXXXU', 'UXXWKWKWKWXXU', '.UXXKKKKKXXU.', '..UUXXXXXUU..', '....UUUUU....'],
   queso: ['..QQQQQQQQ..', '.QQQQQQQQQQ.', 'QQQKQQQQKQQQ', 'QQQQQQQQQQQQ', 'QQ.QQQQQQ.QQ', '.QQQQQQQQQQ.', '..QQQQQQQQ..'],
   boss: ['..Y..Y..YY..Y..Y', '..YYYYYYYYYYYY..', '....DDDDDDDD....', '...DGGGGGGGGD...', '..DGGGGGGGGGGD..', '.DGGKGGGGGGKGGD.', '.DGGGGGGGGGGGGD.', 'DGGGGGWWWWGGGGGD', 'DGGGGGGGGGGGGGGD', 'DGGGGMMMMMMGGGGD', '.DGGGMMMMMMGGGD.', '..DGGGMMMMGGGD..', '...DDDDDDDDDD...'],
 };
@@ -119,8 +120,60 @@ function mk(sc, k, rows, s, map) {
   g.generateTexture(k, rows[0].length * s, rows.length * s);
   g.destroy();
 }
+const THEMES = [
+  { bg: 0x050500, g: 0xf2ff00 }, { bg: 0x0b0418, g: 0xb14cff }, { bg: 0x00141a, g: 0x00f0ff },
+  { bg: 0x1a0a00, g: 0xff8a00 }, { bg: 0x03140a, g: 0x4ade4a }, { bg: 0x18040c, g: 0xff3d7f },
+];
+const lc = (a, b, k) => {
+  const f = (sh) => { const x = (a >> sh) & 255, y = (b >> sh) & 255; return (x + (y - x) * k) | 0; };
+  return (f(16) << 16) | (f(8) << 8) | f(0);
+};
+function face(g, cx, cy, s) {
+  g.fillStyle(0xffffff); g.fillCircle(cx - 20 * s, cy, 11 * s); g.fillCircle(cx + 20 * s, cy, 11 * s);
+  g.fillStyle(0xe63946); g.fillCircle(cx - 16 * s, cy + 2 * s, 6 * s); g.fillCircle(cx + 16 * s, cy + 2 * s, 6 * s);
+  g.fillStyle(0x000000); g.fillCircle(cx - 16 * s, cy + 2 * s, 2.5 * s); g.fillCircle(cx + 16 * s, cy + 2 * s, 2.5 * s);
+  g.lineStyle(5 * s, 0x000000);
+  g.lineBetween(cx - 34 * s, cy - 18 * s, cx - 8 * s, cy - 6 * s); g.lineBetween(cx + 34 * s, cy - 18 * s, cx + 8 * s, cy - 6 * s);
+  g.fillStyle(0x000000); g.fillRect(cx - 30 * s, cy + 18 * s, 60 * s, 24 * s);
+  g.fillStyle(0xffffff);
+  for (let i = 0; i < 5; i++) g.fillRect(cx - 28 * s + i * 12 * s, cy + 18 * s, 8 * s, 10 * s);
+  for (let i = 0; i < 4; i++) g.fillRect(cx - 22 * s + i * 12 * s, cy + 32 * s, 8 * s, 10 * s);
+}
+function mkBoss(sc) {
+  const g = sc.make.graphics({ add: false });
+  // 1: El Domino - caraota gigante con ficha de queso
+  g.fillStyle(0x2a1838); g.fillEllipse(90, 80, 170, 120);
+  g.lineStyle(6, 0x8b5fbf); g.strokeEllipse(90, 80, 170, 120);
+  g.fillStyle(0x6a4a8a); g.fillEllipse(60, 42, 60, 24);
+  g.fillStyle(0xffffff); g.fillRect(60, 0, 60, 30);
+  g.fillStyle(0x000000); g.fillRect(88, 0, 4, 30);
+  [[70, 8], [70, 22], [78, 15], [102, 8], [110, 22], [106, 15]].forEach((p) => g.fillCircle(p[0], p[1], 3));
+  face(g, 90, 80, 1.1);
+  g.generateTexture('boss1', 180, 150); g.clear();
+  // 2: La Pelua - arepa con pelo de carne mechada y queso
+  g.fillStyle(0xc98a2b); g.fillCircle(100, 92, 76);
+  g.fillStyle(0xf2c14e); g.fillCircle(100, 92, 68);
+  for (let i = 0; i < 22; i++) {
+    g.lineStyle(5, i % 2 ? 0xb5463a : 0x7a3b1a);
+    g.lineBetween(36 + i * 6.5, 40, 26 + i * 7.6 + (i % 3) * 5, 4 + (i % 4) * 7);
+  }
+  g.fillStyle(0xffe95c); g.fillRect(24, 112, 28, 40); g.fillRect(150, 112, 26, 52); g.fillRect(70, 150, 20, 20);
+  face(g, 100, 96, 1.2);
+  g.generateTexture('boss2', 200, 172); g.clear();
+  // 3: El Pabellon - plato con arroz, caraotas, platano y carne
+  g.fillStyle(0xffffff); g.fillEllipse(120, 118, 230, 90);
+  g.fillStyle(0xbbbbbb); g.fillEllipse(120, 126, 190, 60);
+  g.fillStyle(0xffffff); g.fillEllipse(62, 84, 84, 62);
+  g.fillStyle(0x2a1838); g.fillEllipse(118, 76, 90, 70); g.lineStyle(3, 0x8b5fbf); g.strokeEllipse(118, 76, 90, 70);
+  g.fillStyle(0xffe95c); g.fillRect(168, 56, 56, 60);
+  g.fillStyle(0xd9a406); for (let i = 0; i < 4; i++) g.fillRect(172 + i * 13, 56, 6, 60);
+  g.fillStyle(0x7a3b1a); g.fillEllipse(110, 30, 100, 44);
+  g.lineStyle(4, 0xb5463a); for (let i = 0; i < 8; i++) g.lineBetween(70 + i * 11, 20, 76 + i * 11, 40);
+  face(g, 118, 86, 1.1);
+  g.generateTexture('boss3', 240, 160);
+  g.destroy();
+}
 const BN = ['LA REINA PEPIADA', 'EL DOMINO', 'LA PELUA', 'EL PABELLON'];
-const BT = [0xffffff, 0xff9999, 0x99ccff, 0xffdd88];
 const EXC = ['EPA!', 'QUE FUERTE!', 'CHEVERE!', 'AGUANTE!', 'ARREPENTIDO!', 'DALE PUES!'];
 
 class Menu extends Phaser.Scene {
@@ -131,18 +184,19 @@ class Menu extends Phaser.Scene {
       mk(o, 'ship', SPR.arepa, 3);
       mk(o, 'ship2', SPR.arepa, 3, { Y: 'L', T: 'Z' });
       mk(o, 'drone', SPR.aguacate, 4);
-      mk(o, 'zig', SPR.caraota, 4);
+      mk(o, 'zig', SPR.caraota, 3);
       mk(o, 'tank', SPR.queso, 4);
-      mk(o, 'boss', SPR.boss, 5);
+      mk(o, 'boss0', SPR.boss, 5);
+      mkBoss(o);
       mk(o, 'iq', SPR.iq, 4);
       mk(o, 'im', SPR.im, 4);
       mk(o, 'ig', SPR.ig, 4);
       mk(o, 'iv', SPR.iv, 4);
+      mk(o, 'eb', SPR.bala, 3);
       mk(o, 'ip', SPR.ip, 4);
       const g = o.make.graphics({ add: false });
       g.fillStyle(0xffffff); g.fillRect(0, 0, 2, 2); g.generateTexture('px', 2, 2); g.clear();
       g.fillStyle(0xc98a2b); g.fillCircle(6, 6, 6); g.fillStyle(0xf2c14e); g.fillCircle(6, 6, 4.5); g.generateTexture('pb', 12, 12); g.clear();
-      g.fillStyle(0xe63946); g.fillCircle(5, 5, 5); g.fillStyle(0xffffff); g.fillCircle(5, 5, 2); g.generateTexture('eb', 10, 10); g.clear();
       g.fillStyle(0x000000, 0.55); g.fillRect(0, 0, 4, 2); g.fillRect(0, 0, 2, 4); g.generateTexture('scan', 4, 4);
       g.destroy();
     }
@@ -186,8 +240,10 @@ class Play extends Phaser.Scene {
   init(d) { this.n = (d && d.n) || 1; }
   create() {
     const o = this, n = o.n;
-    Object.assign(o, { sc: 0, lives: n == 2 ? 4 : 3, wave: 1, kills: 0, combo: 0, lk: -9999, bm: 1, over: false, paused: false, ch: 0, gt: 0, boss: null, nf: 0, ns: 1500, step: 0, t0: 0, pb: [], en: [], eb: [], pu: [] });
+    Object.assign(o, { sc: 0, lives: n == 2 ? 4 : 3, wave: 1, kills: 0, combo: 0, lk: -9999, bm: 1, over: false, paused: false, ch: 0, gt: 0, boss: null, nf: 0, ns: 1500, step: 0, t0: 0, pb: [], gb: [], en: [], eb: [], pu: [] });
     o.bg = o.add.graphics();
+    o.bgc = THEMES[0].bg;
+    o.gc = THEMES[0].g;
     o.stars = [];
     for (let i = 0; i < 80; i++) {
       const s = o.add.image(B(0, W), B(0, H), 'px').setAlpha(0.2 + R() * 0.8).setScale(R() < 0.2 ? 2 : 1);
@@ -293,7 +349,7 @@ class Play extends Phaser.Scene {
     for (let i = 0; i < 9; i++) if (i != gap && i != gap + 1) this.spawn('drone', 40 + i * 90, -30, 0);
   }
   spawnBoss() {
-    const o = this, i = ((o.wave / 4 - 1) | 0) % 4, e = o.add.image(W / 2, -60, 'boss').setDepth(3).setTint(BT[i]);
+    const o = this, k = (o.wave / 4 - 1) | 0, i = k % 4, e = o.add.image(W / 2, -90, 'boss' + i).setDepth(3).setScale(1 + 0.12 * (k >> 2));
     Object.assign(e, { x0: W / 2, a: 0, k: 'boss', hp: (40 + o.wave * 8) * (o.n == 2 ? 1.7 : 1), pts: 5000, nf: 0, n: 0, ph: 0, sp: 0 });
     e.mh = e.hp;
     o.boss = e; o.en.push(e);
@@ -302,9 +358,19 @@ class Play extends Phaser.Scene {
   }
   bossAtk(e) {
     const o = this, p = o.tgt().s, ph = e.ph, a0 = e.a;
-    const pats = [['ring', 'fan'], ['spiral', 'ring', 'wall'], ['spiral', 'wall', 'fan', 'ring']][ph];
+    const pats = [['ring', 'giant', 'fan'], ['spiral', 'giant', 'ring', 'wall'], ['spiral', 'giant', 'wall', 'fan', 'giant', 'ring']][ph];
     const k = pats[e.n++ % pats.length];
-    if (k == 'ring') {
+    if (k == 'giant') {
+      sfx(90, 0.7, 'sawtooth', 0.1, 1.5);
+      o.banner('!! CARAOTA GIGANTE !!', '#ff6b6b');
+      for (let i = 0; i < 6; i++) o.time.delayedCall(i * 110, () => { if (e.active) { if (i & 1) e.clearTint(); else e.setTintFill(0xff3333); } });
+      o.time.delayedCall(700, () => {
+        if (!e.active || o.over) return;
+        e.clearTint();
+        const t = o.tgt().s, an = Math.atan2(t.y - e.y, t.x - e.x);
+        for (const d of (ph == 2 ? [-0.4, 0, 0.4] : [0])) o.giant(e.x, e.y + 40, an + d, 115 + ph * 25, 10 + ph * 5);
+      });
+    } else if (k == 'ring') {
       const c = 10 + ph * 4;
       for (let i = 0; i < c; i++) o.ef(e.x, e.y + 20, i / c * 6.283 + a0, 150 + ph * 20);
     } else if (k == 'fan') {
@@ -317,6 +383,23 @@ class Play extends Phaser.Scene {
       for (let i = 0; i < 16; i++) if (Math.abs(i - g) > 1) o.ef(25 + i * 50, e.y + 30, Math.PI / 2, 150);
     }
     sfx(150, 0.2, 'sawtooth', 0.06, -0.5);
+  }
+  giant(x, y, an, sp, hp) {
+    const b = this.add.image(x, y, 'eb').setScale(3.6).setDepth(4);
+    Object.assign(b, { vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, hp, mh: hp });
+    this.gb.push(b);
+    sfx(140, 0.3, 'square', 0.08, -0.6);
+  }
+  splitGiant(g, kill) {
+    const o = this;
+    if (g.dead) return;
+    g.dead = 1;
+    o.boom(g.x, g.y, 30);
+    if (!kill) return;
+    for (let i = 0; i < 10; i++) o.ef(g.x, g.y, i / 10 * 6.283 + R(), 140);
+    o.sc += 500;
+    o.charge(8);
+    o.pop(g.x, g.y, '+500', YL);
   }
   pick() {
     const r = R();
@@ -333,7 +416,7 @@ class Play extends Phaser.Scene {
     if (e.hp <= 0) return o.kill(e);
     e.setTintFill(0xffffff);
     o.time.delayedCall(60, () => {
-      if (e.active) { e.clearTint(); if (e.k == 'boss') e.setTint(BT[((o.wave / 4 - 1) | 0) % 4]); }
+      if (e.active) e.clearTint();
     });
     sfx(200, 0.05, 'square', 0.04);
   }
@@ -403,6 +486,7 @@ class Play extends Phaser.Scene {
     sfx(60, 0.9, 'sawtooth', 0.15, 3);
     boom(1, 0.3);
     o.eb.forEach((b) => { b.dead = 1; o.em.explode(2, b.x, b.y); });
+    o.gb.forEach((g) => o.splitGiant(g, false));
     o.en.slice().forEach((e) => o.hit(e, e.k == 'boss' ? 12 : 99));
   }
   hurt(pl) {
@@ -428,11 +512,16 @@ class Play extends Phaser.Scene {
     const o = this;
     if (o.paused) return;
     const d = Math.min(dt, 50), s = d / 1000, t = (o.gt += d);
-    o.bg.clear().lineStyle(1, 0xf2ff00, 0.18);
+    const th = THEMES[(o.wave - 1 + (o.boss ? o.boss.ph : 0)) % THEMES.length], kk = Math.min(1, s * 1.5);
+    o.bgc = lc(o.bgc, th.bg, kk);
+    o.gc = lc(o.gc, th.g, kk);
+    o.cameras.main.setBackgroundColor(o.bgc);
+    o.bg.clear().fillStyle(o.gc, 0.07).fillCircle(W / 2, H * 0.28, 150 + 10 * Math.sin(t / 700));
+    o.bg.lineStyle(1, o.gc, 0.22);
     const ph = (t / 1800) % 1;
     for (let i = 0; i < 12; i++) { const f = (i + ph) / 12, y = H * f * f; o.bg.lineBetween(0, y, W, y); }
     for (let x = -400; x <= 1200; x += 100) o.bg.lineBetween(W / 2 + (x - W / 2) * 0.25, 0, x, H);
-    for (const st of o.stars) { st.y += st.sv * s; if (st.y > H) { st.y = 0; st.x = B(0, W); } }
+    for (const st of o.stars) { st.y += st.sv * s; st.setTint(o.gc); if (st.y > H) { st.y = 0; st.x = B(0, W); } }
     if (o.over) return;
     o.ps.forEach((pl) => {
       const p = pl.s, c = pl.pre;
@@ -458,10 +547,19 @@ class Play extends Phaser.Scene {
         if (!e.dead && !b.dead && Math.abs(b.x - e.x) < e.displayWidth / 2 && Math.abs(b.y - e.y) < e.displayHeight / 2) { if (b.pr) { if (!b.hs.has(e)) { b.hs.add(e); o.hit(e, 6); } } else { b.dead = 1; o.hit(e, 1); } }
       }
     }
+    for (const g of o.gb) {
+      for (const b of o.pb) {
+        if (g.dead || b.dead || Math.abs(b.x - g.x) > 44 || Math.abs(b.y - g.y) > 40) continue;
+        if (b.pr) { if (b.hs.has(g)) continue; b.hs.add(g); g.hp -= 6; } else { b.dead = 1; g.hp -= 1; }
+        g.setTintFill(0xffffff);
+        o.time.delayedCall(50, () => g.active && g.clearTint());
+        if (g.hp <= 0) o.splitGiant(g, true);
+      }
+    }
     for (const e of o.en) {
       e.a += s;
       if (e.k == 'boss') {
-        if (e.y < 90) e.y += 70 * s;
+        if (e.y < 110) e.y += 70 * s;
         else {
           const f = e.hp / e.mh, np = f > 0.66 ? 0 : f > 0.33 ? 1 : 2;
           if (np > e.ph) { e.ph = np; o.banner('FASE ' + (np + 1) + '!', '#ff9d3a'); o.cameras.main.shake(300, 0.01); }
@@ -497,7 +595,7 @@ class Play extends Phaser.Scene {
       }
     }
     for (const b of o.eb) {
-      b.x += b.vx * s; b.y += b.vy * s;
+      b.x += b.vx * s; b.y += b.vy * s; b.rotation += 7 * s;
       if (b.y < -20 || b.y > H + 20 || b.x < -20 || b.x > W + 20) b.dead = 1;
       for (const pl of o.ps) {
         const p = pl.s, dx = b.x - p.x, dy = b.y - p.y, dd = dx * dx + dy * dy;
@@ -509,7 +607,18 @@ class Play extends Phaser.Scene {
         }
       }
     }
+    for (const g of o.gb) {
+      g.x += g.vx * s; g.y += g.vy * s; g.rotation += 2.5 * s;
+      if (g.y < -80 || g.y > H + 80 || g.x < -80 || g.x > W + 80) g.dead = 1;
+      for (const pl of o.ps) {
+        if (!g.dead && Math.abs(g.x - pl.s.x) < 40 && Math.abs(g.y - pl.s.y) < 36) o.hurt(pl);
+      }
+    }
     o.fx.clear();
+    for (const g of o.gb) {
+      o.fx.fillStyle(0x000000, 0.7); o.fx.fillRect(g.x - 32, g.y - 56, 64, 8);
+      o.fx.fillStyle(0xff3d3d); o.fx.fillRect(g.x - 30, g.y - 54, 60 * Math.max(0, g.hp) / g.mh, 4);
+    }
     const HC = { Q: 0xffe95c, M: 0xff9d3a, G: 0x4ade4a, V: 0xff6b6b, P: 0x9be8ff };
     for (const u of o.pu) {
       u.y += 70 * s;
@@ -540,7 +649,7 @@ class Play extends Phaser.Scene {
       }
     }
     const sw = (a) => a.filter((e) => { if (e.dead) { e.destroy(); return false; } return true; });
-    o.pb = sw(o.pb); o.en = sw(o.en); o.eb = sw(o.eb); o.pu = sw(o.pu);
+    o.pb = sw(o.pb); o.gb = sw(o.gb); o.en = sw(o.en); o.eb = sw(o.eb); o.pu = sw(o.pu);
     for (const pl of o.ps) {
       if (t < pl.rf) { o.fx.lineStyle(2, 0x9be8ff, 0.5 + 0.4 * Math.sin(t / 60)); o.fx.strokeCircle(pl.s.x, pl.s.y, 22); }
       if (pl.sh > 0) {
