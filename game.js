@@ -121,8 +121,12 @@ function mk(sc, k, rows, s, map) {
   g.destroy();
 }
 const THEMES = [
-  { bg: 0x050500, g: 0xf2ff00 }, { bg: 0x0b0418, g: 0xb14cff }, { bg: 0x00141a, g: 0x00f0ff },
-  { bg: 0x1a0a00, g: 0xff8a00 }, { bg: 0x03140a, g: 0x4ade4a }, { bg: 0x18040c, g: 0xff3d7f },
+  { n: 'LA MESA', bg: 0x0a0a22, hz: 0x4a4a00, g: 0xf2ff00, sc: 'sun' },
+  { n: 'EL AVILA', bg: 0x14063a, hz: 0x7b2cbf, g: 0xc77dff, sc: 'mtn' },
+  { n: 'CARACAS DE NOCHE', bg: 0x001a2a, hz: 0x007aa3, g: 0x00f0ff, sc: 'city' },
+  { n: 'ATARDECER', bg: 0x3a0e00, hz: 0xd9560a, g: 0xffb347, sc: 'sun' },
+  { n: 'LA SELVA', bg: 0x02200e, hz: 0x12803a, g: 0x4ade4a, sc: 'aur' },
+  { n: 'LUNA ROJA', bg: 0x240414, hz: 0xa0143a, g: 0xff3d7f, sc: 'moon' },
 ];
 const lc = (a, b, k) => {
   const f = (sh) => { const x = (a >> sh) & 255, y = (b >> sh) & 255; return (x + (y - x) * k) | 0; };
@@ -514,20 +518,76 @@ class Play extends Phaser.Scene {
       T(o, W / 2, H / 2, 'SE ACABARON LAS AREPAS\n\nSCORE ' + String(o.sc).padStart(6, '0') + '   OLEADA ' + o.wave + '\nHI    ' + String(h).padStart(6, '0') + '   RANGO ' + rk + (o.sc >= h ? '\n\nNUEVO RECORD!' : '') + '\n\nPRESIONA UN BOTON', 26, '#ff9d3a').setOrigin(0.5).setStroke('#000', 6).setDepth(120);
     }
   }
+  drawBg(t, s) {
+    const o = this, th = THEMES[(o.wave - 1 + (o.boss ? o.boss.ph : 0)) % THEMES.length], k = Math.min(1, s * 2.5), hy = 330, g = o.bg;
+    if (o.thn !== th) {
+      if (o.thn && t > 2500) {
+        o.cameras.main.flash(300, (th.g >> 16) & 255, (th.g >> 8) & 255, th.g & 255);
+        const nt = T(o, W / 2, H / 2 + 20, th.n, 24, '#' + th.g.toString(16).padStart(6, '0')).setOrigin(0.5).setStroke('#000', 5);
+        o.tweens.add({ targets: nt, alpha: 0, y: nt.y - 30, delay: 1200, duration: 800, onComplete: () => nt.destroy() });
+      }
+      o.thn = th;
+    }
+    o.bgc = lc(o.bgc, th.bg, k); o.hz = lc(o.hz === undefined ? th.hz : o.hz, th.hz, k); o.gc = lc(o.gc, th.g, k);
+    o.cameras.main.setBackgroundColor(o.bgc);
+    g.clear();
+    for (let i = 0; i < 14; i++) { g.fillStyle(lc(o.bgc, o.hz, i / 13), 1); g.fillRect(0, i * hy / 14, W, hy / 14 + 1); }
+    g.fillStyle(lc(o.hz, 0, 0.8), 1); g.fillRect(0, hy, W, H - hy);
+    const sc = th.sc, dark = lc(o.hz, 0, 0.55), dark2 = lc(o.hz, 0, 0.78);
+    if (sc == 'sun') {
+      const r = 105 + 6 * Math.sin(t / 500), cx = W / 2;
+      g.fillStyle(o.gc, 0.9); g.fillCircle(cx, hy - 20, r);
+      for (let i = 0; i < 6; i++) { g.fillStyle(lc(o.bgc, o.hz, (hy - 20 - r * 0.5 + i * 15) / hy), 1); g.fillRect(cx - r, hy - 20 - r * 0.5 + i * 15 + ((t / 90) % 15) * 0, r * 2, 3 + i * 1.6); }
+    } else if (sc == 'mtn') {
+      [[0.012, 170, dark, 120], [0.03, 230, dark2, 90]].forEach(([sp, w, c, h0], L) => {
+        const off = (t * sp) % w, base = Math.floor(t * sp / w);
+        g.fillStyle(c, 1);
+        for (let i = -1; i < W / w + 2; i++) {
+          const id = i + base, h = h0 + ((id * 53 + L * 17) % 70);
+          g.fillTriangle(i * w - off - w * 0.6, hy, i * w - off + w * 0.5, hy - h, i * w - off + w * 1.6, hy);
+        }
+      });
+    } else if (sc == 'city') {
+      const bw = 62, off = (t * 0.025) % bw, base = Math.floor(t * 0.025 / bw);
+      for (let i = -1; i < W / bw + 2; i++) {
+        const id = i + base, tw = id % 7 == 0, h = 50 + ((id * 53) % 80) + (tw ? 90 : 0), x = i * bw - off;
+        g.fillStyle(dark2, 1); g.fillRect(x, hy - h, bw - 6, h);
+        if (tw) g.fillRect(x + bw / 2 - 5, hy - h - 26, 3, 26);
+        for (let r = 0; r < h / 14 - 1; r++) for (let c = 0; c < 3; c++) {
+          if (((id * 7 + r * 3 + c * 5 + ((t / 700) | 0) * (r == 2 ? 1 : 0)) % 5) < 2) { g.fillStyle(o.gc, 0.75); g.fillRect(x + 6 + c * 17, hy - h + 8 + r * 14, 8, 6); }
+        }
+      }
+    } else if (sc == 'moon') {
+      g.fillStyle(0xffd9d9, 0.92); g.fillCircle(600, 120, 62);
+      g.fillStyle(0xe0a8a8, 1); g.fillCircle(580, 100, 11); g.fillCircle(622, 132, 15); g.fillCircle(598, 148, 8);
+      g.lineStyle(3, 0xffffff, 0.8);
+      for (let k2 = 0; k2 < 3; k2++) { const p = ((t * 0.35 + k2 * 420) % 1300) - 150, y = 40 + k2 * 70 + p * 0.25; g.lineBetween(W - p, y, W - p + 60, y - 15); }
+      const off = (t * 0.02) % 200;
+      g.fillStyle(dark2, 1);
+      for (let i = -1; i < 6; i++) g.fillTriangle(i * 200 - off, hy, i * 200 - off + 100, hy - 70 - ((i + Math.floor(t * 0.02 / 200)) * 37 % 50), i * 200 - off + 200, hy);
+    } else {
+      for (let b = 0; b < 4; b++) {
+        g.lineStyle(16, b % 2 ? o.gc : lc(o.gc, 0xffffff, 0.4), 0.22);
+        g.beginPath();
+        for (let x = 0; x <= W; x += 20) { const y = 70 + b * 42 + Math.sin(x / 85 + t / 650 + b * 1.7) * 26; if (x) g.lineTo(x, y); else g.moveTo(x, y); }
+        g.strokePath();
+      }
+      g.fillStyle(dark2, 1);
+      for (let i = 0; i < 14; i++) g.fillTriangle(i * 60 - 20, hy, i * 60 + 10, hy - 40 - (i * 29 % 45), i * 60 + 40, hy);
+    }
+    // grid en perspectiva sobre el suelo
+    g.lineStyle(1.5, o.gc, 0.5);
+    const ph = (t / 1500) % 1;
+    for (let i = 0; i < 10; i++) { const f = (i + ph) / 10, y = hy + (H - hy) * f * f; g.lineBetween(0, y, W, y); }
+    for (let x = -600; x <= 1400; x += 100) g.lineBetween(W / 2 + (x - W / 2) * 0.12, hy, x, H);
+    g.lineStyle(2, o.gc, 0.9); g.lineBetween(0, hy, W, hy);
+  }
   update(time, dt) {
     const o = this;
     if (o.paused) return;
     const d = Math.min(dt, 50), s = d / 1000, t = (o.gt += d);
-    const th = THEMES[(o.wave - 1 + (o.boss ? o.boss.ph : 0)) % THEMES.length], kk = Math.min(1, s * 1.5);
-    o.bgc = lc(o.bgc, th.bg, kk);
-    o.gc = lc(o.gc, th.g, kk);
-    o.cameras.main.setBackgroundColor(o.bgc);
-    o.bg.clear().fillStyle(o.gc, 0.07).fillCircle(W / 2, H * 0.28, 150 + 10 * Math.sin(t / 700));
-    o.bg.lineStyle(1, o.gc, 0.22);
-    const ph = (t / 1800) % 1;
-    for (let i = 0; i < 12; i++) { const f = (i + ph) / 12, y = H * f * f; o.bg.lineBetween(0, y, W, y); }
-    for (let x = -400; x <= 1200; x += 100) o.bg.lineBetween(W / 2 + (x - W / 2) * 0.25, 0, x, H);
-    for (const st of o.stars) { st.y += st.sv * s; st.setTint(o.gc); if (st.y > H) { st.y = 0; st.x = B(0, W); } }
+    o.drawBg(t, s);
+    for (const st of o.stars) { st.y += st.sv * s; st.setTint(o.gc).setAlpha(0.35 + 0.65 * Math.abs(Math.sin(t / 380 + st.sv))); if (st.y > H) { st.y = 0; st.x = B(0, W); } }
     if (o.over) return;
     o.ps.forEach((pl) => {
       const p = pl.s, c = pl.pre;
