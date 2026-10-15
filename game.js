@@ -16,7 +16,7 @@ const CABINET_KEYS = {
   P2_U: ['ArrowUp'], P2_D: ['ArrowDown'], P2_L: ['ArrowLeft'], P2_R: ['ArrowRight'],
   P2_1: ['r'], P2_2: ['t'], P2_3: ['y'],
   P2_4: ['f'], P2_5: ['g'], P2_6: ['h'],
-  START1: ['Enter'], START2: ['2'],
+  START1: ['Enter', 'p'], START2: ['2'],
 };
 
 const KEY_TO_ARCADE = {};
@@ -96,13 +96,15 @@ const T = (o, x, y, s, sz = 16, c = '#fff') =>
 const PAL = {
   Y: 0xf2c14e, T: 0xc98a2b, K: 0x1a0f00, W: 0xffffff, G: 0x4ade4a, D: 0x1c6b1c,
   M: 0x7a3b1a, U: 0x8b5fbf, Q: 0xffe95c, R: 0xe63946, L: 0xff6fb5, Z: 0xb03a7a,
-  O: 0xd9a406, A: 0x6b3a14, N: 0xbbbbbb,
+  O: 0xd9a406, A: 0x6b3a14, N: 0xbbbbbb, S: 0x9be8ff, E: 0x9acd32,
 };
 const SPR = {
+  iv: ['.QQQ.', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', 'OYYYO', '.OOO.'],
+  ip: ['SSSSSSSS', 'SOOOOOOS', 'SOOEEOOS', 'SOOEEOOS', 'SOOOOOOS', 'SOOOOOOS', '.SOOOOS.', '.SSSSSS.'],
   iq: ['....OOOOOOO', '..OOQQQQQQO', 'OOQQQQKQQQO', 'OQQQQQQQQQO', 'OQQKQQQQQQO', 'OQQQQQQKQQO', 'OOOOOOOOOOO'],
   im: ['..YYY..', '..AAA..', '.AAAAA.', 'AAWAAAA', 'AAWAAAA', 'AAAAAAA', 'AAYYYAA', 'AAYYYAA', 'AAAAAAA', '.AAAAA.'],
   ig: ['..GGGGGGG..', '.GGGGWGGGG.', 'GGGGGGGGGGG', 'WWWWWWWWWWW', '.WWWWWWWWW.', '..NNNNNNN..'],
-  arepa: ['...TTTTTTT...', '.TTYYYYYYYTT.', 'TTYYYYYYYYYTT', 'TYYYYYYYYYYYT', 'TYYKYYYYYKYYT', 'TYYKYYYYYKYYT', 'TYYYYYYYYYYYT', 'TYYYKYYYKYYYT', 'TTYYYKKKYYYTT', '.TTYYYYYYYTT.', '...TTTTTTT...'],
+  arepa: ['....TTTTTTT....', '..TTYYYYYYYTT..', '.TYYYTYYYYYYYT.', 'TYYYKYYYYYKYYYT', 'TYYYKYYYYYKYYYT', 'TYTYYYYYYYYYTYT', 'TOQQQQQQQQQQQOT', 'TYOOOOOOOOOOOYT', 'TYYYYYTYYYYYYYT', '.TYYYYYYYYTYYT.', '..TTYYYYYYYTT..', '....TTTTTTT....'],
   aguacate: ['...DDD...', '..DGGGD..', '.DGGGGGD.', '.DGKGKGD.', 'DGGGGGGGD', 'DGGMMMGGD', 'DGGMMMGGD', '.DGGGGGD.', '..DDDDD..'],
   caraota: ['.UUUUU.', 'UUUUUUU', 'UWKUWKU', 'UUUUUUU', '.UUUUU.'],
   queso: ['..QQQQQQQQ..', '.QQQQQQQQQQ.', 'QQQKQQQQKQQQ', 'QQQQQQQQQQQQ', 'QQ.QQQQQQ.QQ', '.QQQQQQQQQQ.', '..QQQQQQQQ..'],
@@ -135,6 +137,8 @@ class Menu extends Phaser.Scene {
       mk(o, 'iq', SPR.iq, 4);
       mk(o, 'im', SPR.im, 4);
       mk(o, 'ig', SPR.ig, 4);
+      mk(o, 'iv', SPR.iv, 4);
+      mk(o, 'ip', SPR.ip, 4);
       const g = o.make.graphics({ add: false });
       g.fillStyle(0xffffff); g.fillRect(0, 0, 2, 2); g.generateTexture('px', 2, 2); g.clear();
       g.fillStyle(0xc98a2b); g.fillCircle(6, 6, 6); g.fillStyle(0xf2c14e); g.fillCircle(6, 6, 4.5); g.generateTexture('pb', 12, 12); g.clear();
@@ -156,11 +160,11 @@ class Menu extends Phaser.Scene {
       o.tweens.add({ targets: s, y: 250, yoyo: true, repeat: -1, duration: 800 + i * 150, ease: 'sine.inOut' });
     });
     T(o, W / 2, 310, 'LAS AREPAS DEFIENDEN LA MESA CONTRA AGUACATES, CARAOTAS Y QUESOS', 15, '#ccc').setOrigin(0.5);
-    T(o, W / 2, 365, 'JOYSTICK: MOVER - DISPARO AUTOMATICO\nBOTON 1 / 2: GUASACACA (BOMBA) - START: PAUSA', 15, '#aaa').setOrigin(0.5);
-    [['iq', 220, 'MAS QUESO\nARMA +1'], ['im', 400, 'MALTA\nESCUDO'], ['ig', 580, 'GUASACACA\nBOMBA']].forEach(([k, x, l], i) => {
+    T(o, W / 2, 352, 'JOYSTICK: MOVER - DISPARO AUTOMATICO\nBOTON 1/2: GUASACACA (BOMBA) - BOTON 3-6: AREPAZO\nSTART / PAUSE: PAUSAR EL JUEGO', 14, '#aaa').setOrigin(0.5);
+    [['iq', 110, 'QUESO\nARMA +1'], ['im', 255, 'MALTA\nESCUDO'], ['ig', 400, 'GUASACACA\nBOMBA'], ['iv', 545, 'TEQUENO\n+1 VIDA'], ['ip', 690, 'PAPELON\nCADENCIA x2']].forEach(([k, x, l], i) => {
       const im = o.add.image(x, 430, k);
       o.tweens.add({ targets: im, y: 440, angle: 8, yoyo: true, repeat: -1, duration: 600 + i * 120, ease: 'sine.inOut' });
-      T(o, x, 478, l, 12, '#8f8').setOrigin(0.5, 0);
+      T(o, x, 470, l, 12, '#8f8').setOrigin(0.5, 0);
     });
     o.pr = T(o, W / 2, 525, '>> START 1: UN JUGADOR  -  START 2: DOS JUGADORES <<', 20, YL).setOrigin(0.5);
     o.hi = T(o, W / 2, 575, '', 14, '#f6f').setOrigin(0.5);
@@ -182,7 +186,7 @@ class Play extends Phaser.Scene {
   init(d) { this.n = (d && d.n) || 1; }
   create() {
     const o = this, n = o.n;
-    Object.assign(o, { sc: 0, lives: n == 2 ? 4 : 3, wave: 1, kills: 0, combo: 0, lk: -9999, bm: 1, over: false, paused: false, gt: 0, boss: null, nf: 0, ns: 1500, step: 0, t0: 0, pb: [], en: [], eb: [], pu: [] });
+    Object.assign(o, { sc: 0, lives: n == 2 ? 4 : 3, wave: 1, kills: 0, combo: 0, lk: -9999, bm: 1, over: false, paused: false, ch: 0, gt: 0, boss: null, nf: 0, ns: 1500, step: 0, t0: 0, pb: [], en: [], eb: [], pu: [] });
     o.bg = o.add.graphics();
     o.stars = [];
     for (let i = 0; i < 80; i++) {
@@ -195,7 +199,7 @@ class Play extends Phaser.Scene {
       { pre: 'P2_', key: 'ship2', c: 0xff6fb5 },
     ].slice(0, n).map((p, i) => {
       p.s = o.add.image(n == 2 ? (i ? 520 : 280) : W / 2, H - 70, p.key).setDepth(5);
-      return Object.assign(p, { pw: 1, sh: 0, inv: 0, nf: 0 });
+      return Object.assign(p, { pw: 1, sh: 0, inv: 0, nf: 0, rf: 0 });
     });
     o.fx = o.add.graphics().setDepth(6);
     o.em = o.add.particles(0, 0, 'px', { speed: { min: 60, max: 320 }, lifespan: { min: 300, max: 750 }, scale: { start: 3, end: 0 }, tint: [0xf2c14e, 0x4ade4a, 0xffe95c, 0xffffff], emitting: false }).setDepth(7);
@@ -205,14 +209,19 @@ class Play extends Phaser.Scene {
     o.hl = T(o, 14, H - 30, '', 18, '#ff9d3a');
     o.hc = T(o, W / 2, 40, '', 22, YL).setOrigin(0.5, 0);
     o.hb = T(o, W - 14, H - 30, '', 16, '#4ade4a').setOrigin(1, 0);
-    o.pt = T(o, W / 2, H / 2, 'PAUSA\n\nSTART PARA SEGUIR', 36, YL).setOrigin(0.5).setStroke('#000', 6).setDepth(120).setVisible(false);
+    o.hq = T(o, W / 2, H - 46, '', 13, '#ff9d3a').setOrigin(0.5);
+    o.rd = T(o, W / 2, H - 110, 'AREPAZO LISTO!\nPRESIONA B3', 24, YL).setOrigin(0.5).setStroke('#000', 6).setVisible(false);
+    T(o, W / 2, 6, 'START / PAUSE', 14, '#ddd').setOrigin(0.5, 0);
+    o.pov = o.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.7).setDepth(119).setVisible(false);
+    o.pt = T(o, W / 2, H / 2, 'PAUSA\n\nSTART / PAUSE PARA SEGUIR', 40, YL).setOrigin(0.5).setStroke('#000', 6).setDepth(120).setVisible(false);
     onPress = (c) => {
       if (o.over) {
         if (o.gt > o.t0 + 900) o.scene.restart({ n: o.n });
         return;
       }
-      if (c === 'START1' || c === 'START2' || c === 'P1_3' || c === 'P2_3') { o.pause(); return; }
+      if (c === 'START1' || c === 'START2') { o.pause(); return; }
       if (!o.paused && /^P[12]_[12]$/.test(c)) o.bomb();
+      else if (!o.paused && /^P[12]_[3-6]$/.test(c)) o.special();
     };
     o.time.addEvent({ delay: 135, loop: true, callback: () => {
       if (o.over) return;
@@ -221,6 +230,8 @@ class Play extends Phaser.Scene {
       if (i % 4 == 2) sfx(1800, 0.03, 'square', 0.012, -0.9);
     } });
     o.banner('LISTO? OLEADA 1');
+    const lg = T(o, W / 2, H - 160, 'B1/B2: GUASACACA  -  B3-B6: AREPAZO (BARRA ABAJO)  -  START / PAUSE: PAUSA', 14, '#fff').setOrigin(0.5).setStroke('#000', 4);
+    o.tweens.add({ targets: lg, alpha: 0, delay: 6000, duration: 1000, onComplete: () => lg.destroy() });
   }
   pause() {
     const o = this;
@@ -228,6 +239,7 @@ class Play extends Phaser.Scene {
     o.time.paused = o.paused;
     if (o.paused) o.tweens.pauseAll(); else o.tweens.resumeAll();
     o.pt.setVisible(o.paused);
+    o.pov.setVisible(o.paused);
     sfx(o.paused ? 300 : 600, 0.15, 'square', 0.06, o.paused ? -0.4 : 0.4);
   }
   banner(m, c = YL) {
@@ -306,8 +318,12 @@ class Play extends Phaser.Scene {
     }
     sfx(150, 0.2, 'sawtooth', 0.06, -0.5);
   }
+  pick() {
+    const r = R();
+    return r < 0.3 ? 'Q' : r < 0.5 ? 'M' : r < 0.66 ? 'G' : r < 0.8 ? 'V' : 'P';
+  }
   drop(x, y, ty) {
-    const u = this.add.image(x, y, { Q: 'iq', M: 'im', G: 'ig' }[ty]).setDepth(4);
+    const u = this.add.image(x, y, { Q: 'iq', M: 'im', G: 'ig', V: 'iv', P: 'ip' }[ty]).setDepth(4);
     Object.assign(u, { ty, bx: x, ph: R() * 6, sp: 0 });
     this.pu.push(u);
   }
@@ -330,21 +346,52 @@ class Play extends Phaser.Scene {
     if (big) o.cameras.main.shake(500, 0.02);
     o.combo = t - o.lk < 2000 ? o.combo + 1 : 1;
     o.lk = t;
+    o.charge(big ? 50 : e.k == 'tank' ? 10 : 4);
     const m = 1 + Math.min(7, o.combo >> 2), p = e.pts * m;
     o.sc += p;
     o.pop(e.x, e.y, '+' + p, m > 1 ? YL : '#fff');
     if (o.combo % 8 == 0) o.banner(EXC[B(0, EXC.length - 1)], '#ff9d3a');
     if (big) {
       o.boss = null;
-      ['Q', 'M', 'G'].forEach((c, i) => o.drop(e.x + (i - 1) * 60, e.y, c));
+      ['Q', 'V', 'G', 'P'].forEach((c, i) => o.drop(e.x + (i - 1.5) * 60, e.y, c));
       o.banner('JEFE EN EL PLATO!', '#4ade4a');
     } else {
-      if (R() < (e.k == 'tank' ? 0.2 : 0.07)) o.drop(e.x, e.y, R() < 0.45 ? 'Q' : R() < 0.55 ? 'M' : 'G');
+      if (R() < (e.k == 'tank' ? 0.2 : 0.07)) o.drop(e.x, e.y, o.pick());
       if (!o.boss && ++o.kills >= 10 + o.wave * 3) {
         o.kills = 0; o.wave++;
         o.banner('OLEADA ' + o.wave);
         if (o.wave % 4 == 0) o.spawnBoss();
       }
+    }
+  }
+  charge(n) {
+    const o = this, was = o.ch >= 100;
+    o.ch = Math.min(100, o.ch + n);
+    if (!was && o.ch >= 100) {
+      o.cameras.main.flash(220, 242, 255, 0);
+      o.ps.forEach((pl) => o.em.explode(30, pl.s.x, pl.s.y));
+      [523, 659, 784, 1047].forEach((f, i) => o.time.delayedCall(i * 90, () => sfx(f, 0.18, 'square', 0.07, 0.02)));
+      const t = T(o, W / 2, H / 2 - 60, 'AREPAZO LISTO!', 54, YL).setOrigin(0.5).setStroke('#000', 8).setDepth(130);
+      o.tweens.add({ targets: t, scale: 1.25, yoyo: true, repeat: 3, duration: 220 });
+      o.tweens.add({ targets: t, alpha: 0, delay: 1800, duration: 500, onComplete: () => t.destroy() });
+    }
+  }
+  special() {
+    const o = this;
+    if (o.over || o.paused || o.ch < 100) return;
+    o.ch = 0;
+    o.cameras.main.flash(120, 255, 230, 120);
+    o.cameras.main.shake(400, 0.012);
+    sfx(220, 0.8, 'sawtooth', 0.12, 3);
+    boom(0.6, 0.2);
+    o.banner('AREPAZO!', '#ffe95c');
+    for (let i = 0; i < 18; i++) {
+      o.time.delayedCall(i * 45, () => {
+        if (o.over) return;
+        const b = o.add.image(30 + i * 42, H + 10, 'pb').setScale(3).setDepth(4);
+        Object.assign(b, { vx: 0, vy: -760, pr: 1, hs: new Set() });
+        o.pb.push(b);
+      });
     }
   }
   bomb() {
@@ -394,7 +441,7 @@ class Play extends Phaser.Scene {
       p.x = Phaser.Math.Clamp(p.x, 20, W - 20);
       p.y = Phaser.Math.Clamp(p.y, 100, H - 40);
       p.alpha = t < pl.inv ? (((t / 70) | 0) & 1 ? 0.25 : 1) : 1;
-      if (t > pl.nf) { pl.nf = t + (pl.pw == 4 ? 110 : 135); o.shoot(pl); }
+      if (t > pl.nf) { pl.nf = t + (t < pl.rf ? 60 : pl.pw == 4 ? 110 : 135); o.shoot(pl); }
     });
     if (!o.boss && t > o.ns) {
       o.ns = t + Math.max(180, 720 - o.wave * 40) * (o.n == 2 ? 0.75 : 1);
@@ -408,7 +455,7 @@ class Play extends Phaser.Scene {
       b.x += b.vx * s; b.y += b.vy * s;
       if (b.y < -20 || b.x < -20 || b.x > W + 20) b.dead = 1;
       for (const e of o.en) {
-        if (!e.dead && !b.dead && Math.abs(b.x - e.x) < e.displayWidth / 2 && Math.abs(b.y - e.y) < e.displayHeight / 2) { b.dead = 1; o.hit(e, 1); }
+        if (!e.dead && !b.dead && Math.abs(b.x - e.x) < e.displayWidth / 2 && Math.abs(b.y - e.y) < e.displayHeight / 2) { if (b.pr) { if (!b.hs.has(e)) { b.hs.add(e); o.hit(e, 6); } } else { b.dead = 1; o.hit(e, 1); } }
       }
     }
     for (const e of o.en) {
@@ -463,7 +510,7 @@ class Play extends Phaser.Scene {
       }
     }
     o.fx.clear();
-    const HC = { Q: 0xffe95c, M: 0xff9d3a, G: 0x4ade4a };
+    const HC = { Q: 0xffe95c, M: 0xff9d3a, G: 0x4ade4a, V: 0xff6b6b, P: 0x9be8ff };
     for (const u of o.pu) {
       u.y += 70 * s;
       u.x = u.bx + Math.sin(t / 260 + u.ph) * 16;
@@ -481,10 +528,13 @@ class Play extends Phaser.Scene {
         if (!u.dead && Math.abs(u.x - p.x) < 36 && Math.abs(u.y - p.y) < 34) {
           u.dead = 1;
           o.em.explode(18, u.x, u.y);
+          o.charge(25);
           if (u.ty == 'Q') { if (pl.pw < 4) pl.pw++; else o.sc += 1000; }
           else if (u.ty == 'M') pl.sh = Math.min(2, pl.sh + 1);
+          else if (u.ty == 'V') o.lives = Math.min(5, o.lives + 1);
+          else if (u.ty == 'P') pl.rf = t + 8000;
           else o.bm = Math.min(3, o.bm + 1);
-          o.pop(p.x, p.y - 30, { Q: 'MAS QUESO!', M: 'MALTA!', G: 'GUASACACA!' }[u.ty], '#4ade4a');
+          o.pop(p.x, p.y - 30, { Q: 'MAS QUESO!', M: 'MALTA!', G: 'GUASACACA!', V: '+1 AREPA!', P: 'CADENCIA x2!' }[u.ty], '#4ade4a');
           [500, 700, 1000].forEach((f, i) => o.time.delayedCall(i * 50, () => sfx(f, 0.1, 'square', 0.05, 0.3)));
         }
       }
@@ -492,10 +542,22 @@ class Play extends Phaser.Scene {
     const sw = (a) => a.filter((e) => { if (e.dead) { e.destroy(); return false; } return true; });
     o.pb = sw(o.pb); o.en = sw(o.en); o.eb = sw(o.eb); o.pu = sw(o.pu);
     for (const pl of o.ps) {
+      if (t < pl.rf) { o.fx.lineStyle(2, 0x9be8ff, 0.5 + 0.4 * Math.sin(t / 60)); o.fx.strokeCircle(pl.s.x, pl.s.y, 22); }
       if (pl.sh > 0) {
         o.fx.lineStyle(2, pl.c, 0.9);
         for (let i = 0; i < pl.sh; i++) o.fx.strokeCircle(pl.s.x, pl.s.y, 26 + i * 6);
       }
+    }
+    const bx = W / 2 - 150, by = H - 30, full = o.ch >= 100, pz = 0.5 + 0.5 * Math.sin(t / 90);
+    o.fx.fillStyle(0x000000, 0.8); o.fx.fillRect(bx - 4, by - 4, 308, 26);
+    o.fx.fillStyle(0x333333); o.fx.fillRect(bx, by, 300, 18);
+    o.fx.fillStyle(full ? 0xffffff : 0xff9d3a, full ? 0.5 + 0.5 * pz : 1); o.fx.fillRect(bx, by, 300 * o.ch / 100, 18);
+    o.fx.lineStyle(3, full ? 0xf2ff00 : 0xff9d3a); o.fx.strokeRect(bx - 1, by - 1, 302, 20);
+    for (let i = 1; i < 4; i++) { o.fx.lineStyle(1, 0x000000, 0.7); o.fx.lineBetween(bx + i * 75, by, bx + i * 75, by + 18); }
+    o.rd.setVisible(full && (((t / 260) | 0) & 1) == 0);
+    o.hq.setText(full ? '>> AREPAZO LISTO! BOTON 3 <<' : 'AREPAZO ' + (o.ch | 0) + '%').setColor(full ? '#f2ff00' : '#ffb347').setFontSize(full ? 18 : 15).setY(H - 54);
+    if (full) {
+      o.ps.forEach((pl) => { o.fx.lineStyle(3, 0xf2ff00, 0.4 + 0.6 * pz); o.fx.strokeCircle(pl.s.x, pl.s.y, 34 + 8 * pz); });
     }
     if (o.boss) {
       o.fx.fillStyle(0x333333); o.fx.fillRect(100, 34, 600, 8);
