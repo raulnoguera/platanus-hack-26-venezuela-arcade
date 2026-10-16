@@ -264,14 +264,23 @@ class Play extends Phaser.Scene {
     o.fx = o.add.graphics().setDepth(6);
     o.em = o.add.particles(0, 0, 'px', { speed: { min: 60, max: 320 }, lifespan: { min: 300, max: 750 }, scale: { start: 3, end: 0 }, tint: [0xf2c14e, 0x4ade4a, 0xffe95c, 0xffffff], emitting: false }).setDepth(7);
     o.add.tileSprite(0, 0, W, H, 'scan').setOrigin(0).setDepth(100);
-    o.hs = T(o, 14, 8, '', 20, YL);
-    o.hh = T(o, W - 14, 8, '', 15, '#f6f').setOrigin(1, 0);
-    o.hl = T(o, 14, H - 30, '', 18, '#ff9d3a');
-    o.hc = T(o, W / 2, 40, '', 22, YL).setOrigin(0.5, 0);
-    o.hb = T(o, W - 14, H - 30, '', 16, '#4ade4a').setOrigin(1, 0);
+    o.hud = o.add.graphics().setDepth(49);
+    o.hud.fillStyle(0x000000, 0.7); o.hud.fillRect(0, 0, W, 46); o.hud.fillRect(0, H - 52, W, 52);
+    o.hud.lineStyle(2, 0xf2ff00, 0.7); o.hud.lineBetween(0, 46, W, 46); o.hud.lineBetween(0, H - 52, W, H - 52);
+    T(o, 14, 3, 'PUNTOS', 11, '#aaa');
+    o.hs = T(o, 14, 15, '', 26, YL);
+    o.hw = T(o, W / 2, 4, '', 20, '#fff').setOrigin(0.5, 0);
+    T(o, W / 2, 28, 'START / PAUSE', 11, '#999').setOrigin(0.5, 0);
+    T(o, W - 14, 3, 'RECORD', 11, '#aaa').setOrigin(1, 0);
+    o.hh = T(o, W - 14, 15, '', 22, '#f6f').setOrigin(1, 0);
+    o.hv = T(o, 14, H - 49, n == 2 ? 'VIDAS DEL EQUIPO' : 'TUS VIDAS', 11, '#aaa');
+    o.li = [];
+    for (let i = 0; i < 5; i++) o.li.push(o.add.image(36 + i * 40, H - 24, 'ship').setScale(0.8).setDepth(51));
+    o.hc = T(o, W / 2, 62, '', 22, YL).setOrigin(0.5, 0);
+    T(o, W - 14, H - 49, 'GUASACACA', 11, '#aaa').setOrigin(1, 0);
+    o.hb = T(o, W - 14, H - 34, '', 22, '#4ade4a').setOrigin(1, 0);
     o.hq = T(o, W / 2, H - 46, '', 13, '#ff9d3a').setOrigin(0.5);
     o.rd = T(o, W / 2, H - 110, 'AREPAZO LISTO!\nPRESIONA B3', 24, YL).setOrigin(0.5).setStroke('#000', 6).setVisible(false);
-    T(o, W / 2, 6, 'START / PAUSE', 14, '#ddd').setOrigin(0.5, 0);
     o.pov = o.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.7).setDepth(119).setVisible(false);
     o.pt = T(o, W / 2, H / 2, 'PAUSA\n\nSTART / PAUSE PARA SEGUIR', 40, YL).setOrigin(0.5).setStroke('#000', 6).setDepth(120).setVisible(false);
     onPress = (c) => {
@@ -717,6 +726,9 @@ class Play extends Phaser.Scene {
     const sw = (a) => a.filter((e) => { if (e.dead) { e.destroy(); return false; } return true; });
     o.pb = sw(o.pb); o.gb = sw(o.gb); o.en = sw(o.en); o.eb = sw(o.eb); o.pu = sw(o.pu);
     for (const pl of o.ps) {
+      for (let i = 0; i < o.lives; i++) { o.fx.fillStyle(pl.c, 1); o.fx.fillCircle(pl.s.x + (i - (o.lives - 1) / 2) * 11, pl.s.y + 27, 3.5); }
+    }
+    for (const pl of o.ps) {
       if (t < pl.rf) { o.fx.lineStyle(2, 0x9be8ff, 0.5 + 0.4 * Math.sin(t / 60)); o.fx.strokeCircle(pl.s.x, pl.s.y, 22); }
       if (pl.sh > 0) {
         o.fx.lineStyle(2, pl.c, 0.9);
@@ -730,18 +742,20 @@ class Play extends Phaser.Scene {
     o.fx.lineStyle(3, full ? 0xf2ff00 : 0xff9d3a); o.fx.strokeRect(bx - 1, by - 1, 302, 20);
     for (let i = 1; i < 4; i++) { o.fx.lineStyle(1, 0x000000, 0.7); o.fx.lineBetween(bx + i * 75, by, bx + i * 75, by + 18); }
     o.rd.setVisible(full && (((t / 260) | 0) & 1) == 0);
-    o.hq.setText(full ? '>> AREPAZO LISTO! BOTON 3 <<' : 'AREPAZO ' + (o.ch | 0) + '%').setColor(full ? '#f2ff00' : '#ffb347').setFontSize(full ? 18 : 15).setY(H - 54);
+    o.hq.setText(full ? '>> AREPAZO LISTO! BOTON 3 <<' : 'AREPAZO ' + (o.ch | 0) + '%').setColor(full ? '#f2ff00' : '#ffb347').setFontSize(full ? 16 : 14).setY(H - 49);
     if (full) {
       o.ps.forEach((pl) => { o.fx.lineStyle(3, 0xf2ff00, 0.4 + 0.6 * pz); o.fx.strokeCircle(pl.s.x, pl.s.y, 34 + 8 * pz); });
     }
     if (o.boss) {
-      o.fx.fillStyle(0x333333); o.fx.fillRect(100, 34, 600, 8);
-      o.fx.fillStyle(0xff9d3a); o.fx.fillRect(100, 34, 600 * Math.max(0, o.boss.hp) / o.boss.mh, 8);
+      o.fx.fillStyle(0x333333); o.fx.fillRect(100, 52, 600, 8);
+      o.fx.fillStyle(0xff9d3a); o.fx.fillRect(100, 52, 600 * Math.max(0, o.boss.hp) / o.boss.mh, 8);
     }
     o.hs.setText(String(o.sc).padStart(6, '0'));
-    o.hh.setText('HI ' + String(Math.max(HI, o.sc)).padStart(6, '0'));
-    o.hl.setText('AREPAS ' + 'O'.repeat(o.lives));
-    o.hb.setText('GUASACACA x' + o.bm);
+    o.hw.setText('OLEADA ' + o.wave);
+    o.hh.setText(String(Math.max(HI, o.sc)).padStart(6, '0'));
+    o.hv.setColor(o.lives == 1 ? '#ff4d4d' : '#aaa').setText((o.n == 2 ? 'VIDAS DEL EQUIPO' : 'TUS VIDAS') + (o.lives == 1 ? '  ULTIMA VIDA!' : ''));
+    o.li.forEach((im, i) => im.setVisible(i < o.lives).setAlpha(o.lives == 1 ? 0.5 + 0.5 * Math.sin(t / 120) : 1));
+    o.hb.setText('x' + o.bm);
     o.hc.setText(t - o.lk < 2000 && o.combo > 3 ? 'COMBO x' + (1 + Math.min(7, o.combo >> 2)) : '');
   }
 }
